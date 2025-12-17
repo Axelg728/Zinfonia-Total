@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ZinfoniaTotal</string>
+    <string name="title_activity_main">ZinfoniaTotal</string>
+    <string name="package_name">com.pc.zinfoniatotal</string>
+    <string name="custom_url_scheme">com.pc.zinfoniatotal</string>
+</resources>
