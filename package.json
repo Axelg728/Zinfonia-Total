@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "ionic:serve": "ionic serve",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -35,5 +36,17 @@
     "globals": "^16.3.0",
     "react-scripts": "5.0.1",
     "vite": "^7.0.4"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

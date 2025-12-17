@@ -14,7 +14,7 @@ import {
   IonMenuButton,
   IonIcon
 } from '@ionic/react';
-import { arrowBack, home, images } from 'ionicons/icons';
+import { arrowBack, home, images, trash } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 
 export default function RegistroMusical() {
@@ -42,6 +42,12 @@ export default function RegistroMusical() {
     } else {
       alert('Por favor, completa al menos canción y artista');
     }
+  };
+
+  const eliminarRegistro = (index) => {
+    const nuevosRegistros = registros.filter((_, i) => i !== index);
+    setRegistros(nuevosRegistros);
+    localStorage.setItem('registrosMusicales', JSON.stringify(nuevosRegistros));
   };
 
   const buttonStyle = {
@@ -111,6 +117,9 @@ export default function RegistroMusical() {
                 <h3>{r.cancion} - {r.artista}</h3>
                 <p>{r.genero} • {r.fecha}</p>
               </IonLabel>
+              <IonButton color="danger" fill="clear" onClick={() => eliminarRegistro(i)}>
+                <IonIcon icon={trash} />
+              </IonButton>
             </IonItem>
           ))}
         </IonList>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -13,9 +13,12 @@ import {
   IonButton,
   IonIcon,
   IonButtons,
-  IonMenuButton
+  IonMenuButton,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel
 } from '@ionic/react';
-import { star, calendar, arrowBack, home } from 'ionicons/icons';
+import { star, calendar, arrowBack, home, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 
 export default function Eventos() {
@@ -27,12 +30,30 @@ export default function Eventos() {
     { nombre: 'Indie Summer Fest', fecha: '05 Nov 2025' },
   ];
 
-  const [guardados, setGuardados] = useState(Array(eventos.length).fill(false));
+  const [guardados, setGuardados] = useState([]);
+  const [asistencia, setAsistencia] = useState([]);
+  const [vista, setVista] = useState('todos'); // 'todos', 'guardados', 'asistir'
+
+  // Cargar datos de localStorage al iniciar
+  useEffect(() => {
+    const savedGuardados = JSON.parse(localStorage.getItem('eventosGuardados')) || Array(eventos.length).fill(false);
+    const savedAsistencia = JSON.parse(localStorage.getItem('eventosAsistencia')) || Array(eventos.length).fill(false);
+    setGuardados(savedGuardados);
+    setAsistencia(savedAsistencia);
+  }, []);
 
   const toggleGuardado = (index) => {
     const nuevosGuardados = [...guardados];
     nuevosGuardados[index] = !nuevosGuardados[index];
     setGuardados(nuevosGuardados);
+    localStorage.setItem('eventosGuardados', JSON.stringify(nuevosGuardados));
+  };
+
+  const toggleAsistencia = (index) => {
+    const nuevaAsistencia = [...asistencia];
+    nuevaAsistencia[index] = !nuevaAsistencia[index];
+    setAsistencia(nuevaAsistencia);
+    localStorage.setItem('eventosAsistencia', JSON.stringify(nuevaAsistencia));
   };
 
   const buttonStyle = {
@@ -49,6 +70,14 @@ export default function Eventos() {
     margin: '0.5rem',
     fontWeight: '600'
   };
+
+  // Filtra los eventos según la vista seleccionada
+  const eventosMostrados = eventos.filter((_, i) => {
+    if (vista === 'todos') return true;
+    if (vista === 'guardados') return guardados[i];
+    if (vista === 'asistir') return asistencia[i];
+    return true;
+  });
 
   return (
     <IonPage style={{ backgroundColor: '#0a0a0a' }}>
@@ -67,35 +96,78 @@ export default function Eventos() {
             </IonButton>
           </IonButtons>
         </IonToolbar>
+
+        {/* Segmento para cambiar la vista */}
+        <IonToolbar color="dark">
+          <IonSegment value={vista} onIonChange={e => setVista(e.detail.value)}>
+            <IonSegmentButton value="todos">
+              <IonLabel>Todos</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="guardados">
+              <IonLabel>Guardados</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="asistir">
+              <IonLabel>Asistiré</IonLabel>
+            </IonSegmentButton>
+          </IonSegment>
+        </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen style={{ padding: '10px' }}>
-        {eventos.map((ev, index) => (
-          <IonCard key={index} style={{ marginBottom: '12px', backgroundColor: '#1c1c1c', borderRadius: '12px' }}>
-            <IonCardHeader>
-              <IonCardTitle style={{ color: '#fff', fontSize: '1rem' }}>{ev.nombre}</IonCardTitle>
-              <IonCardSubtitle style={{ color: '#ff80ab', display: 'flex', alignItems: 'center' }}>
-                <IonIcon icon={calendar} style={{ marginRight: '5px' }} />
-                {ev.fecha}
-              </IonCardSubtitle>
-            </IonCardHeader>
+        {eventosMostrados.length === 0 && (
+          <p style={{ color: '#fff', textAlign: 'center', marginTop: '1rem' }}>
+            {vista === 'guardados' && 'No hay eventos guardados'}
+            {vista === 'asistir' && 'No hay eventos a los que asistirás'}
+            {vista === 'todos' && 'No hay eventos disponibles'}
+          </p>
+        )}
 
-            <IonCardContent style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <IonButton fill="solid" color="dark" size="small" style={buttonStyle}>
-                Asistir
-              </IonButton>
+        {eventosMostrados.map((ev, index) => {
+          const i = eventos.indexOf(ev); // índice real en los arrays de guardados/asistencia
 
-              <IonButton
-                fill="clear"
-                color={guardados[index] ? 'danger' : 'light'}
-                size="small"
-                onClick={() => toggleGuardado(index)}
-              >
-                <IonIcon icon={star} />
-              </IonButton>
-            </IonCardContent>
-          </IonCard>
-        ))}
+          return (
+            <IonCard key={i} style={{ marginBottom: '12px', backgroundColor: '#1c1c1c', borderRadius: '12px' }}>
+              <IonCardHeader>
+                <IonCardTitle style={{ color: '#fff', fontSize: '1rem' }}>{ev.nombre}</IonCardTitle>
+                <IonCardSubtitle style={{ color: '#ff80ab', display: 'flex', alignItems: 'center' }}>
+                  <IonIcon icon={calendar} style={{ marginRight: '5px' }} />
+                  {ev.fecha}
+                </IonCardSubtitle>
+              </IonCardHeader>
+
+              <IonCardContent style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <IonButton
+                  fill="solid"
+                  color={asistencia[i] ? 'success' : 'dark'}
+                  size="small"
+                  style={buttonStyle}
+                  onClick={() => toggleAsistencia(i)}
+                >
+                  {asistencia[i] ? (
+                    <>
+                      <IonIcon icon={checkmarkCircleOutline} slot="start" />
+                      Asistiré
+                    </>
+                  ) : (
+                    <>
+                      <IonIcon icon={closeCircleOutline} slot="start" />
+                      Asistir
+                    </>
+                  )}
+                </IonButton>
+
+                <IonButton
+                  fill="clear"
+                  color={guardados[i] ? 'danger' : 'light'}
+                  size="small"
+                  onClick={() => toggleGuardado(i)}
+                >
+                  <IonIcon icon={star} />
+                </IonButton>
+              </IonCardContent>
+            </IonCard>
+          );
+        })}
 
         <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <IonButton style={navButtonStyle} onClick={() => history.push('/top-canciones')}>

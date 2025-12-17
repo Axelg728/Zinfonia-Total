@@ -14,19 +14,18 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonFab,
-  IonFabButton,
   IonToast,
   IonButtons,
   IonMenuButton
 } from '@ionic/react';
-import { musicalNotesOutline, addOutline, arrowBack, home, star } from 'ionicons/icons';
+import { musicalNotesOutline, arrowBack, home, star, chevronDown, chevronUp } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 
 export default function Playlists() {
   const history = useHistory();
   const [toastMsg, setToastMsg] = useState('');
   const [favorites, setFavorites] = useState([]);
+  const [showFavorites, setShowFavorites] = useState(true);
 
   const genres = [
     { name: 'Pop', playlists: ['Pop Hits 2025', 'K-Pop Vibes', 'Pop Legends'], color: '#ff6a00' },
@@ -41,13 +40,19 @@ export default function Playlists() {
     setFavorites(stored);
   }, []);
 
-  const handleSelectPlaylist = (pl) => {
-    if (!favorites.includes(pl)) {
-      const updated = [...favorites, pl];
+  // Toggle favorito: agrega o elimina
+  const toggleFavorite = (pl) => {
+    if (favorites.includes(pl)) {
+      const updated = favorites.filter(f => f !== pl);
       setFavorites(updated);
       localStorage.setItem('favorites', JSON.stringify(updated));
+      setToastMsg(`Playlist eliminada de favoritos: ${pl}`);
+    } else {
+      const updated = [pl, ...favorites]; // agregar al inicio
+      setFavorites(updated);
+      localStorage.setItem('favorites', JSON.stringify(updated));
+      setToastMsg(`Playlist agregada a favoritos: ${pl}`);
     }
-    setToastMsg(`Playlist agregada a favoritos: ${pl}`);
   };
 
   const buttonStyle = {
@@ -63,6 +68,14 @@ export default function Playlists() {
     '--border-radius': '8px',
     margin: '0.3rem',
     fontWeight: '600'
+  };
+
+  const favoriteButtonStyle = {
+    '--background': 'transparent',
+    '--border-radius': '50%',
+    padding: '0',
+    minWidth: '36px',
+    height: '36px'
   };
 
   return (
@@ -87,6 +100,29 @@ export default function Playlists() {
       </IonHeader>
 
       <IonContent fullscreen className="ion-padding">
+
+        {/* Favoritos con toggle */}
+        <IonCard style={{ marginBottom: '1rem', borderRadius: '12px' }}>
+          <IonCardHeader onClick={() => setShowFavorites(!showFavorites)} style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}>
+            <IonCardTitle style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>⭐ Favoritos ({favorites.length})</IonCardTitle>
+            <IonIcon icon={showFavorites ? chevronUp : chevronDown} />
+          </IonCardHeader>
+          {showFavorites && favorites.length > 0 && (
+            <IonCardContent>
+              {favorites.map((fav, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                  <span style={{ fontWeight: '500' }}>{fav}</span>
+                  <IonButton style={favoriteButtonStyle} onClick={() => toggleFavorite(fav)}>
+                    <IonIcon icon={star} color="warning" />
+                  </IonButton>
+                </div>
+              ))}
+              {favorites.length === 0 && <p style={{ color: '#888' }}>No hay favoritos</p>}
+            </IonCardContent>
+          )}
+        </IonCard>
+
+        {/* Playlists por género */}
         <IonGrid>
           {genres.map((genre, index) => (
             <IonRow key={index} style={{ marginBottom: '1rem' }}>
@@ -97,16 +133,12 @@ export default function Playlists() {
                   </IonCardHeader>
                   <IonCardContent>
                     {genre.playlists.map((pl, idx) => (
-                      <IonButton
-                        key={idx}
-                        expand="block"
-                        fill="solid"
-                        color="dark"
-                        style={{ margin: '0.3rem 0', fontWeight: '600', '--background': '#000000' }}
-                        onClick={() => handleSelectPlaylist(pl)}
-                      >
-                        {pl}
-                      </IonButton>
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                        <span style={{ color: '#fff', fontWeight: '500' }}>{pl}</span>
+                        <IonButton style={favoriteButtonStyle} onClick={() => toggleFavorite(pl)}>
+                          <IonIcon icon={star} color={favorites.includes(pl) ? 'warning' : 'medium'} />
+                        </IonButton>
+                      </div>
                     ))}
                   </IonCardContent>
                 </IonCard>
@@ -115,6 +147,7 @@ export default function Playlists() {
           ))}
         </IonGrid>
 
+        {/* Navegación a otras secciones */}
         <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <IonButton style={navButtonStyle} onClick={() => history.push('/top-canciones')}>
             <IonIcon icon={star} slot="start" />
@@ -124,12 +157,6 @@ export default function Playlists() {
             Ver Eventos
           </IonButton>
         </div>
-
-        <IonFab vertical="bottom" horizontal="end" slot="fixed">
-          <IonFabButton color="dark" onClick={() => alert('Añadir nueva playlist')}>
-            <IonIcon icon={addOutline} />
-          </IonFabButton>
-        </IonFab>
 
         <IonToast
           isOpen={!!toastMsg}
